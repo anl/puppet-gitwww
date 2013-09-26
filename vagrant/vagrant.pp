@@ -1,2 +1,6 @@
 # Include this module
-include gitwww
+include nginx
+
+class { 'gitwww':
+  web_module => 'nginx'
+}
