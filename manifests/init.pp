@@ -1,6 +1,6 @@
 # == Class: gitwww
 #
-# Push-to-deploy website infrastructure.
+# Push-to-deploy Git website infrastructure.
 #
 # === Parameters
 #
@@ -11,6 +11,12 @@
 #   System user that will own git_dir and www_dir contents.  It is assumed
 #   that this user will belong to a group with the same name as the username.
 #   Default: git
+#
+# [*sites*]
+#   Array of site names (FQDNs) that will be configured for push-to-deploy.
+#   Used in configuring directories, Git repositories. and, optionally,
+#   web server configuration (only if $web_module is specified).
+#   Default: [] (empty array)
 #
 # [*unmanaged_dir*]
 #   Parent directory of site files not managed by git; it is assumed that
@@ -48,12 +54,23 @@
 class gitwww (
   $git_dir = '/srv/git',
   $git_user = 'git',
+  $sites = [],
   $unmanaged_dir = '/srv/unmanaged',
   $web_module = false,
   $www_dir = '/srv/www',
   $www_group = 'www-data',
   $www_user = 'www-data'
   ) {
+
+  validate_absolute_path($git_dir)
+  validate_absolute_path($unmanaged_dir)
+  validate_absolute_path($www_dir)
+
+  if $git_dir =~ /\/$/ {
+    $git_dir_slash = $git_dir
+  } else {
+    $git_dir_slash = "${git_dir}/"
+  }
 
   if $web_module {
     Class[$web_module] -> Class['gitwww']
@@ -81,5 +98,13 @@ class gitwww (
     owner  => $www_user,
     group  => $www_group,
     mode   => '0555',
+  }
+
+  $git_sites = prefix($sites, $git_dir_slash)
+
+  vcsrepo { $git_sites:
+    ensure   => bare,
+    provider => git,
+    user     => $git_user,
   }
 }

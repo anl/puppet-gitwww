@@ -9,4 +9,4 @@ project_page 'https://github.com/anl/puppet-gitwww'
 
 ## Add dependencies, if any:
 dependency 'puppetlabs/stdlib', '>= 4.1.0'
-
+dependency 'puppetlabs/vcsrepo', '>= 0.1.2'
