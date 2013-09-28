@@ -82,7 +82,7 @@ class gitwww (
     'ensure'     => 'present',
     'comment'    => 'Git user',
     'managehome' => true,
-    'shell'      => '/bin/false'
+    'shell'      => '/bin/bash',
   } )
 
   file { [$git_dir, $www_dir]:
@@ -106,5 +106,6 @@ class gitwww (
     ensure   => bare,
     provider => git,
     user     => $git_user,
+    require  => File[$git_dir],
   }
 }
