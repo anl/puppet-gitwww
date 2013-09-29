@@ -12,6 +12,9 @@
 #   that this user will belong to a group with the same name as the username.
 #   Default: git
 #
+# [*log_dir*]
+#   Parent directory of site logs; default: /srv/logs
+#
 # [*sites*]
 #   Array of site names (FQDNs) that will be configured for push-to-deploy.
 #   Used in configuring directories, Git repositories. and, optionally,
@@ -54,6 +57,7 @@
 class gitwww (
   $git_dir = '/srv/git',
   $git_user = 'git',
+  $log_dir = '/srv/logs',
   $sites = [],
   $unmanaged_dir = '/srv/unmanaged',
   $web_module = false,
@@ -70,6 +74,12 @@ class gitwww (
     $git_dir_slash = $git_dir
   } else {
     $git_dir_slash = "${git_dir}/"
+  }
+
+  if $log_dir =~ /\/$/ {
+    $log_dir_slash = $log_dir
+  } else {
+    $log_dir_slash = "${log_dir}/"
   }
 
   if $unmanaged_dir =~ /\/$/ {
@@ -97,19 +107,12 @@ class gitwww (
     'shell'      => '/bin/bash',
   } )
 
-  file { [$git_dir, $www_dir]:
+  file { [$git_dir, $log_dir, $unmanaged_dir, $www_dir]:
     ensure  => directory,
-    owner   => $git_user,
-    group   => $git_user,
+    owner   => 'root',
+    group   => 'root',
     mode    => '0555',
     require => User[$git_user],
-  }
-
-  file { $unmanaged_dir:
-    ensure => directory,
-    owner  => $www_user,
-    group  => $www_group,
-    mode   => '0555',
   }
 
   $git_sites = prefix($sites, $git_dir_slash)
@@ -121,14 +124,16 @@ class gitwww (
     require  => File[$git_dir],
   }
 
+  $log_sites = prefix($sites, $log_dir_slash)
   $unmanaged_sites = prefix($sites, $unmanaged_dir_slash)
+  $root_dirs = flatten([$log_sites, $unmanaged_sites])
 
-  file { $unmanaged_sites:
+  file { $root_dirs:
     ensure  => directory,
     owner   => 'root',
     group   => 'root',
     mode    => '0755',
-    require => File[$unmanaged_dir],
+    require => [ File[$log_dir], File[$unmanaged_dir] ],
   }
 
   $www_sites = prefix($sites, $www_dir_slash)
