@@ -72,6 +72,18 @@ class gitwww (
     $git_dir_slash = "${git_dir}/"
   }
 
+  if $unmanaged_dir =~ /\/$/ {
+    $unmanaged_dir_slash = $unmanaged_dir
+  } else {
+    $unmanaged_dir_slash = "${unmanaged_dir}/"
+  }
+
+  if $www_dir =~ /\/$/ {
+    $www_dir_slash = $www_dir
+  } else {
+    $www_dir_slash = "${www_dir}/"
+  }
+
   if $web_module {
     Class[$web_module] -> Class['gitwww']
   }
@@ -107,5 +119,25 @@ class gitwww (
     provider => git,
     user     => $git_user,
     require  => File[$git_dir],
+  }
+
+  $unmanaged_sites = prefix($sites, $unmanaged_dir_slash)
+
+  file { $unmanaged_sites:
+    ensure  => directory,
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0755',
+    require => File[$unmanaged_dir],
+  }
+
+  $www_sites = prefix($sites, $www_dir_slash)
+
+  file { $www_sites:
+    ensure  => directory,
+    owner   => $git_user,
+    group   => $git_user,
+    mode    => '0755',
+    require => File[$www_dir],
   }
 }
