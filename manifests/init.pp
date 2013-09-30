@@ -7,6 +7,12 @@
 # [*git_dir*]
 #   Parent directory of bare git repos; default: /srv/git
 #
+# [*git_ssh_key*]
+#   SSH public key for git user; default: false (no key will be installed).
+#
+# [*git_ssh_key_type*]
+#   Key type for $git_ssh_key; default: ssh-rsa
+#
 # [*git_user*]
 #   System user that will own git_dir and www_dir contents.  It is assumed
 #   that this user will belong to a group with the same name as the username.
@@ -56,6 +62,8 @@
 #
 class gitwww (
   $git_dir = '/srv/git',
+  $git_ssh_key = false,
+  $git_ssh_key_type = 'ssh-rsa',
   $git_user = 'git',
   $log_dir = '/srv/logs',
   $sites = [],
@@ -69,6 +77,9 @@ class gitwww (
   validate_absolute_path($git_dir)
   validate_absolute_path($unmanaged_dir)
   validate_absolute_path($www_dir)
+
+  validate_re($git_ssh_key_type,[ 'ssh-dss', 'ssh-rsa', 'ecdsa-sha2-nistp256',
+    'ecdsa-sha2-nistp384', 'ecdsa-sha2-nistp521' ])
 
   if $git_dir =~ /\/$/ {
     $git_dir_slash = $git_dir
@@ -100,12 +111,21 @@ class gitwww (
 
   ensure_packages(['git'])
 
-  ensure_resource('user', 'git', {
+  ensure_resource('user', $git_user, {
     'ensure'     => 'present',
     'comment'    => 'Git user',
     'managehome' => true,
     'shell'      => '/bin/bash',
   } )
+
+  if $git_ssh_key {
+    ssh_authorized_key { "${git_user} push-to-deploy key":
+      ensure => present,
+      key    => $git_ssh_key,
+      type   => $git_ssh_key_type,
+      user   => $git_user,
+    }
+  }
 
   file { [$git_dir, $log_dir, $unmanaged_dir, $www_dir]:
     ensure  => directory,
