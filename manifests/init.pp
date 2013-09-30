@@ -81,12 +81,6 @@ class gitwww (
   validate_re($git_ssh_key_type,[ 'ssh-dss', 'ssh-rsa', 'ecdsa-sha2-nistp256',
     'ecdsa-sha2-nistp384', 'ecdsa-sha2-nistp521' ])
 
-  if $git_dir =~ /\/$/ {
-    $git_dir_slash = $git_dir
-  } else {
-    $git_dir_slash = "${git_dir}/"
-  }
-
   if $log_dir =~ /\/$/ {
     $log_dir_slash = $log_dir
   } else {
@@ -135,13 +129,9 @@ class gitwww (
     require => User[$git_user],
   }
 
-  $git_sites = prefix($sites, $git_dir_slash)
-
-  vcsrepo { $git_sites:
-    ensure   => bare,
-    provider => git,
-    user     => $git_user,
-    require  => File[$git_dir],
+  gitwww::git_config { $sites:
+    git_dir  => $git_dir,
+    git_user => $git_user,
   }
 
   $log_sites = prefix($sites, $log_dir_slash)
