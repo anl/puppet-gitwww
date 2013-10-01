@@ -109,15 +109,19 @@ class gitwww (
     'ensure'     => 'present',
     'comment'    => 'Git user',
     'managehome' => true,
-    'shell'      => '/bin/bash',
+    'shell'      => '/bin/bash', # can't be git-shell for vcsrepo to work
   } )
 
   if $git_ssh_key {
+    # Security options on key ref.
+    # http://joeyh.name/blog/entry/locking_down_ssh_authorized_keys/
     ssh_authorized_key { "${git_user} push-to-deploy key":
-      ensure => present,
-      key    => $git_ssh_key,
-      type   => $git_ssh_key_type,
-      user   => $git_user,
+      ensure  => present,
+      key     => $git_ssh_key,
+      options => [ 'command="perl -e \'exec qw(/usr/bin/git-shell -c), $ENV{SSH_ORIGINAL_COMMAND}\'"',
+  'no-port-forwarding', 'no-agent-forwarding', 'no-X11-forwarding', 'no-pty' ],
+      type    => $git_ssh_key_type,
+      user    => $git_user,
     }
   }
 
