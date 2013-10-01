@@ -27,7 +27,7 @@
 #
 # Copyright 2013 Andrew Leonard
 #
-define gitwww::git_config($git_dir, $git_user) {
+define gitwww::git_config($git_dir, $git_user, $www_dir) {
 
   $site = $name
 
@@ -37,10 +37,26 @@ define gitwww::git_config($git_dir, $git_user) {
     $git_dir_slash = "${git_dir}/"
   }
 
-  vcsrepo { "${git_dir_slash}${site}":
+  if $www_dir =~ /\/$/ {
+    $www_dir_slash = $www_dir
+  } else {
+    $www_dir_slash = "${www_dir}/"
+  }
+
+  $site_dir = "${www_dir_slash}${site}"
+
+  vcsrepo { "${git_dir_slash}${site}.git":
     ensure   => bare,
     provider => git,
     user     => $git_user,
     require  => File[$git_dir],
+  }
+
+  file { "${git_dir_slash}${site}.git/hooks/post-receive":
+    owner   => $git_user,
+    group   => $git_user,
+    mode    => '0555',
+    content => template('gitwww/post-receive.erb'),
+    require => Vcsrepo["${git_dir_slash}${site}.git"],
   }
 }

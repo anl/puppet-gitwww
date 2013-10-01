@@ -136,6 +136,7 @@ class gitwww (
   gitwww::git_config { $sites:
     git_dir  => $git_dir,
     git_user => $git_user,
+    www_dir  => $www_dir,
   }
 
   $log_sites = prefix($sites, $log_dir_slash)
