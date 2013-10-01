@@ -7,16 +7,20 @@
 #
 # [*git_dir*]
 #   Parent directory of bare git repos; assumed to already be created as a
-#   "file" resource.  Default: /srv/git
+#   "file" resource.  No default.
 #
 # [*git_user*]
-#   System user that will own git repo.
+#   System user that will own git repo.  No default.
+#
+# [*www_dir*]
+#   Parent directory of site document roots.  No default.
 #
 # === Examples
 #
 # gitwww::git_config { 'www.example.com':
 #   git_dir  => '/srv/git',
 #   git_user => 'git',
+#   www_dir  => '/srv/www',
 # }
 #
 # === Authors
