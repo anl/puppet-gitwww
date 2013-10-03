@@ -22,12 +22,10 @@
 #   Parent directory of site logs; default: /srv/logs
 #
 # [*sites*]
-#   Hash of push-to-deploy site names (FQDNs) as keys and Puppet type
-#   to provision site configuration as values
-#   (e.g. nginx::site::django).  Used in configuring directories, Git
-#   repositories. and, optionally, web server configuration (only if
-#   $web_module is specified).  Value can be set to false to avoid
-#   deploying web site configuration.  Default: {} (empty hash)
+#   Array of site names (FQDNs) that will be configured for push-to-deploy.
+#   Used in configuring directories, Git repositories. and, optionally,
+#   web server configuration (only if $web_module is specified).
+#   Default: [] (empty array)
 #
 # [*unmanaged_dir*]
 #   Parent directory of site files not managed by git; it is assumed that
@@ -68,7 +66,7 @@ class gitwww (
   $git_ssh_key_type = 'ssh-rsa',
   $git_user = 'git',
   $log_dir = '/srv/logs',
-  $sites = {},
+  $sites = [],
   $unmanaged_dir = '/srv/unmanaged',
   $web_module = false,
   $www_dir = '/srv/www',
@@ -100,8 +98,6 @@ class gitwww (
   } else {
     $www_dir_slash = "${www_dir}/"
   }
-
-  $site_names = keys($sites)
 
   if $web_module {
     Class[$web_module] -> Class['gitwww']
@@ -137,14 +133,14 @@ class gitwww (
     require => User[$git_user],
   }
 
-  gitwww::git_config { $site_names:
+  gitwww::git_config { $sites:
     git_dir  => $git_dir,
     git_user => $git_user,
     www_dir  => $www_dir,
   }
 
-  $log_sites = prefix($site_names, $log_dir_slash)
-  $unmanaged_sites = prefix($site_names, $unmanaged_dir_slash)
+  $log_sites = prefix($sites, $log_dir_slash)
+  $unmanaged_sites = prefix($sites, $unmanaged_dir_slash)
   $root_dirs = flatten([$log_sites, $unmanaged_sites])
 
   file { $root_dirs:
@@ -155,7 +151,7 @@ class gitwww (
     require => [ File[$log_dir], File[$unmanaged_dir] ],
   }
 
-  $www_sites = prefix($site_names, $www_dir_slash)
+  $www_sites = prefix($sites, $www_dir_slash)
 
   file { $www_sites:
     ensure  => directory,
