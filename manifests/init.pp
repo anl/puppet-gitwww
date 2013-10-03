@@ -22,18 +22,14 @@
 #   Parent directory of site logs; default: /srv/logs
 #
 # [*sites*]
-#   Array of site names (FQDNs) that will be configured for push-to-deploy.
-#   Used in configuring directories, Git repositories. and, optionally,
-#   web server configuration (only if $web_module is specified).
-#   Default: [] (empty array)
+#   Array of site names (FQDNs) that will be configured for
+#   push-to-deploy.  Used in configuring directories and Git
+#   repositories.  Default: [] (empty array)
 #
 # [*unmanaged_dir*]
 #   Parent directory of site files not managed by git; it is assumed that
 #   these will be linked into the site by symlinks or another mechanism
 #   outside the control of this module.  Default: /srv/unmanaged
-#
-# [*web_module*]
-#   If set, require web_module before this one; default: false.
 #
 # [*www_dir*]
 #   Parent directory of site document roots.  Default: /srv/www
@@ -68,7 +64,6 @@ class gitwww (
   $log_dir = '/srv/logs',
   $sites = [],
   $unmanaged_dir = '/srv/unmanaged',
-  $web_module = false,
   $www_dir = '/srv/www',
   $www_group = 'www-data',
   $www_user = 'www-data'
@@ -97,10 +92,6 @@ class gitwww (
     $www_dir_slash = $www_dir
   } else {
     $www_dir_slash = "${www_dir}/"
-  }
-
-  if $web_module {
-    Class[$web_module] -> Class['gitwww']
   }
 
   ensure_packages(['git'])
