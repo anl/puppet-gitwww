@@ -21,6 +21,10 @@
 # [*log_dir*]
 #   Parent directory of site logs; default: /srv/logs
 #
+# [*server_module*]
+#   Name of Puppet module configuring web server.  If set, orders gitwww module
+#   before $server_module.  Default: false
+#
 # [*sites*]
 #   Array of site names (FQDNs) that will be configured for
 #   push-to-deploy.  Used in configuring directories and Git
@@ -62,6 +66,7 @@ class gitwww (
   $git_ssh_key_type = 'ssh-rsa',
   $git_user = 'git',
   $log_dir = '/srv/logs',
+  $server_module = false,
   $sites = [],
   $unmanaged_dir = '/srv/unmanaged',
   $www_dir = '/srv/www',
@@ -75,6 +80,12 @@ class gitwww (
 
   validate_re($git_ssh_key_type,[ 'ssh-dss', 'ssh-rsa', 'ecdsa-sha2-nistp256',
     'ecdsa-sha2-nistp384', 'ecdsa-sha2-nistp521' ])
+
+  # Set up optional resource ordering - this class comes before server
+  # software:
+  if $server_module {
+    Class['gitwww'] -> Class[$server_module]
+  }
 
   if $log_dir =~ /\/$/ {
     $log_dir_slash = $log_dir
